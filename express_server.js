@@ -22,8 +22,13 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);   // urls_index needs to be an .ejs file in the views folder
 });
 
+app.get("/urls/:id", (req, res) => {
+  const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id]};
+  res.render("urls_show", templateVars);
+});
+
 app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  res.send("<html><body>Hello <b>World</b></body></html>\n"); // getting hello, responding with hello world 
 });
 
 app.listen(PORT, () => {
