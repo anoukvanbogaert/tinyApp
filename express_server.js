@@ -41,6 +41,18 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect(`/urls`)
 })
 
+app.post("/urls/:id/edit", (req, res) => {
+  console.log("You've been redirected!");
+  const id = req.params.id
+  res.redirect(`/urls/${id}`)
+})
+
+app.post("/urls/:id/update", (req, res) => {
+  const edited = req.body.updatedURL;
+  urlDatabase[req.params.id] = edited
+  res.redirect(`/urls`)
+})
+
 app.get("/urls", (req, res) => {
   const templateVars = {urls: urlDatabase};
   res.render("urls_index", templateVars);   // urls_index needs to be an .ejs file in the views folder
