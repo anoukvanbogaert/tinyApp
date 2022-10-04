@@ -34,6 +34,13 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${newKey}`);
 });
 
+app.post("/urls/:id/delete", (req, res) => {
+  console.log("This item has been deleted!");
+  const deleted = req.params.id;
+  delete urlDatabase[req.params.id];
+  res.redirect(`/urls`)
+})
+
 app.get("/urls", (req, res) => {
   const templateVars = {urls: urlDatabase};
   res.render("urls_index", templateVars);   // urls_index needs to be an .ejs file in the views folder
