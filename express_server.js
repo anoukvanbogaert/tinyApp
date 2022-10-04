@@ -27,17 +27,22 @@ function generateRandomString() {
 // app.get("/urls.json", (req, res) => {
 //   res.json(urlDatabase);
 // });
+app.post("/urls", (req, res) => {
+  console.log("this is the req body", req.body); // Log the POST request body to the console
+  let newKey = generateRandomString()
+  urlDatabase[newKey] = req.body.longURL;
+  res.redirect(`/urls/${newKey}`);
+});
 
 app.get("/urls", (req, res) => {
   const templateVars = {urls: urlDatabase};
   res.render("urls_index", templateVars);   // urls_index needs to be an .ejs file in the views folder
 });
 
-app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  let newKey = generateRandomString()
-  urlDatabase.newKey = req.body
-  res.send(newKey); // Respond with 'Ok' (we will replace this)
+
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
 });
 
 app.get("/urls/new", (req, res) => {
