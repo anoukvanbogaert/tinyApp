@@ -22,13 +22,13 @@ function generateRandomString() {
   return text
 }
 
-// app.get("/", (req, res) => {
-//   res.send("Hello!");
-// });
-
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
+const findUserEmail = function(email, users) {
+  for (let userID in users) {
+    if (email === users[userID].email) {
+      return users[userID]
+    }
+  }
+}
 
 app.post("/login", (req, res) => {
   let username = req.body.username
@@ -37,14 +37,63 @@ app.post("/login", (req, res) => {
   res.redirect('/urls')
 });
 
+// TO DO: fix
+
 app.get("/login", (req, res) => {
-  const templateVars = {username: req.cookies["username"]};
+  const templateVars = {user: undefined};
   res.render("urls_index", templateVars);
 });
 
+let users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
+app.post("/register", (req, res) => {
+  let newEmail = req.body.email;
+  let newPass = req.body.password;
+
+  if (newEmail === "" || newPass === "") {
+    res.status(400)
+    res.send("Please enter an email address AND a password")
+    return
+  }
+
+  if (findUserEmail(newEmail, users)) {
+    res.status(400).send("This email address is already in use!")
+    return
+  }
+
+  let randomID = generateRandomString();
+
+  users[randomID] = {
+    id: randomID,
+    email: newEmail,
+    password: newPass
+  };
+
+  res.cookie('user_id', randomID).redirect('/urls');
+
+});
+
+app.get("/register", (req, res) => {
+  const templateVars = {user: undefined};
+  res.render("registration", templateVars);
+  res.clearCookie["user_id"]
+});
+
+
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
-  res.redirect('/urls')
+  res.clearCookie('user_id');
+  res.redirect("/urls")
 })
 
 app.post("/urls", (req, res) => {
@@ -74,8 +123,16 @@ app.post("/urls/:id/update", (req, res) => {
 })
 
 app.get("/urls", (req, res) => {
-  let myUsername = req.cookies["username"]
-  const templateVars = {urls: urlDatabase, username: myUsername};
+  let myUsername = req.cookies["user_id"]
+  if (!myUsername) {
+    const templateVars = {urls: urlDatabase, username: myUsername}
+    res.render("urls_index", templateVars);
+    return;
+  }
+  //use myUsername to find user in users object
+  //with the user, grab the email inside that user object
+  let user = users[myUsername]
+  const templateVars = {urls: urlDatabase, user: user};
   res.render("urls_index", templateVars);   // urls_index needs to be an .ejs file in the views folder
 });
 
@@ -87,8 +144,8 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  // const templateVars = {username: req.cookies["username"]};
-  res.render("urls_new");
+  const templateVars = {username: req.cookies["username"]};
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -99,9 +156,6 @@ app.get("/urls/:id", (req, res) => {
 // app.get("/hello", (req, res) => {
 //   res.send("<html><body>Hello <b>World</b></body></html>\n"); // getting hello, responding with hello world 
 // });
-
-
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
