@@ -66,6 +66,11 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
+  let myUsername = req.cookies["user_id"]
+  if (myUsername) {
+    res.redirect('/urls')
+    return
+  }
   const templateVars = {user: undefined};
   res.render("login", templateVars);
 });
@@ -99,9 +104,13 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
+  let myUsername = req.cookies["user_id"]
+  if (myUsername) {
+    res.redirect('/urls')
+    return
+  }
   const templateVars = {user: undefined};
-  res.render("registration", templateVars);
-  res.clearCookie["user_id"]
+  res.render("registration", templateVars).clearCookie["user_id"]
 });
 
 
@@ -112,6 +121,11 @@ app.post("/logout", (req, res) => {
 
 app.post("/urls", (req, res) => {
   console.log("this is the req body", req.body); // Log the POST request body to the console
+  let myUsername = req.cookies["user_id"]
+  if (!myUsername) {
+    res.send('Please log in to create a tiny URL')
+    return
+  }
   let newKey = generateRandomString()
   urlDatabase[newKey] = req.body.longURL;
   res.redirect(`/urls/${newKey}`);
@@ -153,11 +167,20 @@ app.get("/urls", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   // const templateVars = {username: req.cookies["username"]};
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  if (urlDatabase[req.params.id]) {
+    const longURL = urlDatabase[req.params.id];
+    res.redirect(longURL);
+    return
+  }
+  res.send("This tiny url does not exist")
 });
 
 app.get("/urls/new", (req, res) => {
+  let myUsername = req.cookies["user_id"]
+  if (!myUsername) {
+    res.redirect('/login')
+    return
+  }
   const templateVars = {user: req.cookies["user_id"]};
   res.render("urls_new", templateVars);
 });
