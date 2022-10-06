@@ -11,12 +11,12 @@
 <body>
   <!-- this line refers to the header file -->
   <%- include ('partials/_header') %>
-    <h1>Create account</h1>
+    <h1>Login</h1>
     <div>
-      <form method="POST" action="/register">
+      <form method="POST" action="/login">
         Username: <input type="email" name="email" placeholder="your email address">
         Password: <input type="password" name="password" placeholder="password">
         <button type="submit" class="btn btn-outline-success my-2 my-sm-0">submit</button>
       </form>
     </div>
-    Already have an account? <a class href="/login">Login</a>
+    New here? <a class href="/register">Register</a>

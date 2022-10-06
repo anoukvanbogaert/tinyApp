@@ -30,20 +30,6 @@ const findUserEmail = function(email, users) {
   }
 }
 
-app.post("/login", (req, res) => {
-  let username = req.body.username
-  console.log(username)
-  res.cookie('username', username)
-  res.redirect('/urls')
-});
-
-// TO DO: fix
-
-app.get("/login", (req, res) => {
-  const templateVars = {user: undefined};
-  res.render("urls_index", templateVars);
-});
-
 let users = {
   userRandomID: {
     id: "userRandomID",
@@ -56,6 +42,34 @@ let users = {
     password: "dishwasher-funk",
   },
 };
+
+app.post("/login", (req, res) => {
+  let newEmail = req.body.email;
+  let newPass = req.body.password;
+
+  if (newEmail === "" || newPass === "") {
+    res.status(400)
+    res.send("Please enter an email address AND a password")
+    return
+  }
+
+  const output = findUserEmail(newEmail, users)
+
+  if (output) {
+    if (newPass === output.password) {
+      res.cookie('user_id', output.id).redirect('/urls');
+      return
+    }
+    res.status(403).send("Wrong credentials")
+  }
+  res.status(403).send("User not found")
+});
+
+app.get("/login", (req, res) => {
+  const templateVars = {user: undefined};
+  res.render("login", templateVars);
+});
+
 
 app.post("/register", (req, res) => {
   let newEmail = req.body.email;
@@ -125,7 +139,7 @@ app.post("/urls/:id/update", (req, res) => {
 app.get("/urls", (req, res) => {
   let myUsername = req.cookies["user_id"]
   if (!myUsername) {
-    const templateVars = {urls: urlDatabase, username: myUsername}
+    const templateVars = {urls: urlDatabase, user: myUsername}
     res.render("urls_index", templateVars);
     return;
   }
@@ -144,12 +158,12 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {username: req.cookies["username"]};
+  const templateVars = {user: req.cookies["user_id"]};
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies["username"]};
+  const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id], user: req.cookies["user_id"]};
   res.render("urls_show", templateVars);
 });
 
