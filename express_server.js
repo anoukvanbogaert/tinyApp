@@ -1,13 +1,19 @@
 const express = require('express');
 const app = express();
 const favicon = require('serve-favicon')
-const cookieParser = require('cookie-parser')
+const cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs")
 const PORT = 8080;
 app.set("view engine", "ejs");
 app.use(express.urlencoded({extended: true}));
 app.use('/public/images', express.static('public/images'));
-app.use(cookieParser())
+app.use(cookieSession({
+  name: 'session',
+  keys: ['user'],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 
 // security
 const password = "1234"
@@ -116,7 +122,8 @@ app.post("/login", (req, res) => {
 
   if (output) {
     if (bcrypt.compareSync(newPass, output.password)) {
-      res.cookie('user_id', output.id).redirect('/urls');
+      req.session.user_id = "user".
+        res.redirect('/urls');
       return
     }
     res.status(403).send("Wrong credentials")
@@ -147,13 +154,13 @@ app.post("/register", (req, res) => {
     email: newEmail,
     password: newPass
   };
-  console.log(users)
-  res.cookie('user_id', randomID).redirect('/urls');
+  req.session.user_id = randomID
+  res.redirect('/urls');
 });
 
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect("/urls")
 })
 // app.post("/urls/:id", (req, res) => {
@@ -162,7 +169,7 @@ app.post("/logout", (req, res) => {
 
 app.post("/urls", (req, res) => {
   console.log("this is the req body", req.body); // Log the POST request body to the console
-  let myUsername = req.cookies["user_id"]
+  let myUsername = req.session.user_id
   if (!myUsername) {
     res.send('Please log in to create a tiny URL')
     return
@@ -190,19 +197,21 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  let myUsername = req.cookies["user_id"]
+  let myUsername = req.session.user_id
   if (!myUsername) {
     res.redirect('/login')
     return
   }
-  const templateVars = {user: req.cookies["user_id"]};
+  console.log(users)
+  console.log(myUsername)
+  const templateVars = {user: {email: users[myUsername].email}};
   res.render("urls_new", templateVars);
 });
 
 
 app.get("/urls/:id", (req, res) => {
   let myLongURL = urlDatabase[req.params.id];
-  const myUsername = req.cookies["user_id"]
+  const myUsername = req.session.user_id
   const urls = findURLbyuserID(myUsername)
   const userKeys = Object.keys(urls)
   const checkKeys = []
@@ -226,12 +235,13 @@ app.get("/urls/:id", (req, res) => {
     res.send("you don't own this ID!")
     return
   }
-  const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: req.cookies["user_id"]};
+  console.log('check1:', req.session.user_id)
+  const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: req.session.user_id};
   res.render("urls_show", templateVars);
 });
 
 app.get("/urls", (req, res) => {
-  let userID = req.cookies["user_id"]
+  let userID = req.session.user_id
 
   if (!userID) {
     const templateVars = {urls: urlDatabase, user: userID}
@@ -240,16 +250,18 @@ app.get("/urls", (req, res) => {
   }
 
   let user = users[userID]
+  console.log(users)
+  console.log('userid', userID)
+
 
   let urls = findURLbyuserID(userID)
-
   const templateVars = {urls: urls, user: user};
   res.render("urls_index", templateVars);
 });
 
 app.get("/login", (req, res) => {
-  let myUsername = req.cookies["user_id"]
-  if (myUsername) {
+  req.session.user_id = "user"
+  if (req.session.user_id) {
     res.redirect('/urls')
     return
   }
@@ -258,13 +270,13 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  let myUsername = req.cookies["user_id"]
-  if (myUsername) {
+  if (req.session.user_id) {
     res.redirect('/urls')
     return
   }
   const templateVars = {user: undefined};
-  res.render("registration", templateVars).clearCookie["user_id"]
+  req.session = null
+  res.render("registration", templateVars)
 });
 
 // start server

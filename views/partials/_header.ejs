@@ -1,7 +1,7 @@
 <header>
   <nav class="navbar navbar-expand-md navbar-dark bg-info" style="background-color: #F8C8DC;">
     <img src="../../public/images/favicon.ico" alt="Logo" width="30" height="45" class="d-inline-block align-text-top">
-    <a class="navbar-brand" href="/urls"> TinyApp</a>
+    <a class="navbar-brand" href="/urls"> &nbsp&nbspTinyApp</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarcd ../
     kup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -13,16 +13,16 @@
       </div>
     </div>
     <% if(user) { %>
-      <h4>Welcome, <%= user.email %>!</h>
-          <form method="POST" action="/logout">
-            <button type="submit" class="btn btn-danger">Logout</button>
-          </form>
-          <% } else { %>
-            <form method="POST" action="/login">
-              <label for="userLogin"></label>
-              <a class="btn btn-light" href="/login" role="button">Login</a>
-              <a class="btn btn-light" href="/register" role="button">Register</a>
-            </form>
-            <% } %>
+      <p>Welcome, <%= user.email %>!&nbsp</p>
+      <form method="POST" action="/logout">
+        <button type="submit" class="btn btn-danger">Logout</button>
+      </form>
+      <% } else { %>
+        <form method="POST" action="/login">
+          <label for="userLogin"></label>
+          <a class="btn btn-light" href="/login" role="button">Login</a>
+          <a class="btn btn-light" href="/register" role="button">Register</a>
+        </form>
+        <% } %>
   </nav>
 </header>
