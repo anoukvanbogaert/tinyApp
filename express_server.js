@@ -2,12 +2,16 @@ const express = require('express');
 const app = express();
 const favicon = require('serve-favicon')
 const cookieParser = require('cookie-parser')
+const bcrypt = require("bcryptjs")
 const PORT = 8080;
 app.set("view engine", "ejs");
 app.use(express.urlencoded({extended: true}));
 app.use('/public/images', express.static('public/images'));
 app.use(cookieParser())
 
+// security
+const password = "1234"
+const hashedPassword = bcrypt.hashSync(password, 10)
 
 // function definitions
 const generateRandomString = function() {
@@ -101,7 +105,8 @@ app.post("/urls/:id/update", (req, res) => {
 
 app.post("/login", (req, res) => {
   let newEmail = req.body.email;
-  let newPass = req.body.password;
+  let newPass = req.body.password
+  const output = findUserEmail(newEmail, users)
 
   if (newEmail === "" || newPass === "") {
     res.status(400)
@@ -109,10 +114,8 @@ app.post("/login", (req, res) => {
     return
   }
 
-  const output = findUserEmail(newEmail, users)
-
   if (output) {
-    if (newPass === output.password) {
+    if (bcrypt.compareSync(newPass, output.password)) {
       res.cookie('user_id', output.id).redirect('/urls');
       return
     }
@@ -124,7 +127,7 @@ app.post("/login", (req, res) => {
 
 app.post("/register", (req, res) => {
   let newEmail = req.body.email;
-  let newPass = req.body.password;
+  let newPass = bcrypt.hashSync(req.body.password, 10);
 
   if (newEmail === "" || newPass === "") {
     res.status(400)
@@ -144,7 +147,7 @@ app.post("/register", (req, res) => {
     email: newEmail,
     password: newPass
   };
-
+  console.log(users)
   res.cookie('user_id', randomID).redirect('/urls');
 });
 
