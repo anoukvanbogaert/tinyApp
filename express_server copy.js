@@ -13,9 +13,11 @@ app.use(cookieParser())
 const generateRandomString = function() {
   let text = ""
   const possibilities = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
   for (let i = 0; i < 6; i++) {
     text += possibilities.charAt(Math.floor(Math.random() * possibilities.length))
   }
+
   return text
 }
 
@@ -23,30 +25,23 @@ const generateRandomString = function() {
 const findURLbyuserID = function(userID) {
   const urls = {}
   for (let keyOfURL in urlDatabase) {
+
     if (urlDatabase[keyOfURL].userID === userID) {
       urls[keyOfURL] = urlDatabase[keyOfURL].longURL
     }
+
   }
   return urls
 }
 
 
-const findID = function(id) {
-  const keys = []
-  for (let key in urlDatabase) {
-    if (key === id) {
-      keys.push(key)
-    }
-  }
-  return keys
-}
-
-
 const findUserEmail = function(email, users) {
   for (let userID in users) {
+
     if (email === users[userID].email) {
       return users[userID];
     }
+
   }
 };
 
@@ -153,8 +148,6 @@ app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
   res.redirect("/urls")
 })
-// app.post("/urls/:id", (req, res) => {
-// })
 
 
 app.post("/urls", (req, res) => {
@@ -175,6 +168,8 @@ app.post("/urls", (req, res) => {
 
 
 // Get definitions
+
+
 app.get("/u/:id", (req, res) => {
   console.log(req.params.id)
   // const templateVars = {username: req.cookies["username"]};
@@ -196,35 +191,13 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-
 app.get("/urls/:id", (req, res) => {
   let myLongURL = urlDatabase[req.params.id];
-  const myUsername = req.cookies["user_id"]
-  const urls = findURLbyuserID(myUsername)
-  const userKeys = Object.keys(urls)
-  const checkKeys = []
-
-  console.log(checkKeys, typeof checkKeys)
-  console.log(checkKeys === [])
-  if (!myLongURL) {
-    res.send("this shortURL does not exist!")
-    return
+  if (myLongURL) {
+    const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: req.cookies["user_id"]};
+    res.render("urls_show", templateVars);
   }
-  if (!myUsername) {
-    res.send("You are not logged in")
-    return
-  }
-  for (let keys of userKeys) {
-    if (keys === req.params.id) {
-      checkKeys.push(keys)
-    }
-  }
-  if (checkKeys.length === 0) {
-    res.send("you don't own this ID!")
-    return
-  }
-  const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: req.cookies["user_id"]};
-  res.render("urls_show", templateVars);
+  res.send("this shortURL does not exist!")
 });
 
 app.get("/urls", (req, res) => {
@@ -236,12 +209,17 @@ app.get("/urls", (req, res) => {
     return;
   }
 
+
+  //use myUsername to find user in users object
+  //with the user, grab the email inside that user object
   let user = users[userID]
 
-  let urls = findURLbyuserID(userID)
+  findURLbyuserID(userID)
+
+  console.log(urls)
 
   const templateVars = {urls: urls, user: user};
-  res.render("urls_index", templateVars);
+  res.render("urls_index", templateVars);   // urls_index needs to be an .ejs file in the views folder
 });
 
 app.get("/login", (req, res) => {
