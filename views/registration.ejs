@@ -11,12 +11,20 @@
 <body>
   <!-- this line refers to the header file -->
   <%- include ('partials/_header') %>
-    <h1>Create account</h1>
+    <ul class="nav justify-content-center">
+      <h1>Create account</h1>
+    </ul>
     <div>
-      <form method="POST" action="/register">
-        Username: <input type="email" name="email" placeholder="your email address">
-        Password: <input type="password" name="password" placeholder="password">
-        <button type="submit" class="btn btn-outline-success my-2 my-sm-0">submit</button>
-      </form>
+      <ul class="nav justify-content-center">
+        <form method="POST" action="/register">
+          <li class="nav-item"></li>
+          Username: <input type="email" name="email" placeholder="your email address">
+          Password: <input type="password" name="password" placeholder="password">
+          <button type="submit" class="btn btn-outline-success my-2 my-sm-0">submit</button>
+        </form>
+        </li>
+      </ul>
     </div>
-    Already have an account? <a class href="/login">Login</a>
+    <ul class="nav justify-content-center">
+      Already have an account? &nbsp<a class href="/login">Login</a>
+    </ul>
