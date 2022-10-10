@@ -40,19 +40,8 @@ const findByuserID = function(userID) {
   return urls;
 };
 
-
-const findID = function(id) {
-  const keys = [];
-  for (let key in urlDatabase) {
-    if (key === id) {
-      keys.push(key);
-    }
-  }
-  return keys;
-};
-
-
 //object definitions
+//example of what the url database is supposed to look like 
 let urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
@@ -64,7 +53,7 @@ let urlDatabase = {
   },
 };
 
-
+// the users object
 let users = {
   userRandomID: {
     id: "userRandomID",
@@ -78,105 +67,9 @@ let users = {
   },
 };
 
-
-// Post definitions
-app.post("/urls/:id/delete", (req, res) => {
-  console.log("This item has been deleted!");
-  const deleted = req.params.id;
-  delete urlDatabase[req.params.id];
-  res.redirect(`/urls`);
-});
-
-
-app.post("/urls/:id/edit", (req, res) => {
-  console.log("You've been redirected!");
-  const id = req.params.id;
-  res.redirect(`/urls/${id}`);
-});
-
-
-app.post("/urls/:id/update", (req, res) => {
-  const edited = req.body.updatedURL;
-  urlDatabase[req.params.id].longURL = edited;
-  res.redirect(`/urls`);
-});
-
-
-app.post("/login", (req, res) => {
-  let newEmail = req.body.email;
-  let newPass = req.body.password;
-  const output = getUserByEmail(newEmail, users);
-  if (newEmail === "" || newPass === "") {
-    res.status(400);
-    res.send("Please enter an email address AND a password");
-    return;
-  }
-  if (output) {
-    if (bcrypt.compareSync(newPass, output.password)) {
-      req.session.user_id = "user".
-        res.redirect('/urls');
-      return;
-    }
-    res.status(403).send("Wrong credentials");
-  }
-  res.status(403).send("User not found");
-});
-
-
-app.post("/register", (req, res) => {
-  let newEmail = req.body.email;
-  let newPass = req.body.password;
-  if (newPass !== "") {
-    newPass = bcrypt.hashSync(req.body.password, 10);
-  }
-  if (newEmail === "" || newPass === "") {
-    res.status(400);
-    res.send("Please enter an email address AND a password");
-    return;
-  }
-  if (getUserByEmail(newEmail, users)) {
-    res.status(400).send("This email address is already in use!");
-    return;
-  }
-  let randomID = generateRandomString();
-  users[randomID] = {
-    id: randomID,
-    email: newEmail,
-    password: newPass
-  };
-  req.session.user_id = randomID;
-  res.redirect('/urls');
-});
-
-
-app.post("/logout", (req, res) => {
-  req.session = null;
-  res.redirect("/urls");
-});
-// app.post("/urls/:id", (req, res) => {
-// })
-
-
-app.post("/urls", (req, res) => {
-  console.log("this is the req body", req.body); // Log the POST request body to the console
-  let myUsername = req.session.user_id;
-  if (!myUsername) {
-    res.send('Please log in to create a tiny URL');
-    return;
-  }
-  let newKey = generateRandomString();
-  urlDatabase[newKey] = {
-    longURL: req.body.longURL,
-    userID: myUsername
-  };
-  console.log(urlDatabase, users);
-  res.redirect(`/urls/${newKey}`);
-});
-
-
-// Get definitions
+// GET routes
+// redirecting the user to the long URL when they click the short URL
 app.get("/u/:id", (req, res) => {
-  // const templateVars = {username: req.cookies["username"]};
   if (urlDatabase[req.params.id]) {
     const longURL = urlDatabase[req.params.id].longURL;
     res.redirect(longURL);
@@ -185,7 +78,7 @@ app.get("/u/:id", (req, res) => {
   res.send("This tiny url does not exist");
 });
 
-
+// the page where the user can create a new tinu URL. If they are not logged in they get redirected to the login page
 app.get("/urls/new", (req, res) => {
   let myUsername = req.session.user_id;
   if (!myUsername) {
@@ -196,7 +89,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-
+// the page where the user can see their tiny URL and can edit it. A few permissions have been added to this page, e.g. the user sees different error messages depending on if they are trying to view a tiny URL that isn't theirs, they are not logged in or the tinyURL doesn't exist
 app.get("/urls/:id", (req, res) => {
   let myLongURL = urlDatabase[req.params.id];
   const myUsername = req.session.user_id;
@@ -224,23 +117,21 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-
+// this is the main page. I added an example tiny URL for every user just so that they can easily see what the purpose of the website is. This website also has a permission installed which redirects to an error page if the user is not logged in.
 app.get("/urls", (req, res) => {
   let userID = req.session.user_id;
   let user = users[userID];
   if (!userID || !users[userID]) {
-    const templateVars = {urls: urlDatabase, user: userID};
+    // const templateVars = {urls: urlDatabase, user: userID};
     res.send('please log in or register first!');
     return;
   }
   let urls = findByuserID(userID);
-  urls.ex1234 = "https://www.google.com";
-  console.log(urlDatabase, users);
   const templateVars = {urls: urls, user: user};
   res.render("urls_index", templateVars);
 });
 
-
+// the login page, redirects to the main page if the user was already logged in
 app.get("/login", (req, res) => {
   req.session.user_id = "user";
   if (users[req.session.user_id]) {
@@ -251,7 +142,7 @@ app.get("/login", (req, res) => {
   res.render("login", templateVars);
 });
 
-
+// the register page, redirects to the main page if the user was already logged in
 app.get("/register", (req, res) => {
   if (users[req.session.user_id]) {
     res.redirect('/urls');
@@ -260,6 +151,97 @@ app.get("/register", (req, res) => {
   const templateVars = {user: undefined};
   req.session = null;
   res.render("registration", templateVars);
+});
+
+// -------------------------------------------------
+
+// POST ROUTES
+// when a user deletes a short URL, it gets deleted from the url Database and the user is redirected to the main /urls page
+app.post("/urls/:id/delete", (req, res) => {
+  const deleted = req.params.id;
+  delete urlDatabase[req.params.id];
+  res.redirect(`/urls`);
+});
+
+// when a user edits a short URL, the user is redirected to the main /urls page + see next POST route
+app.post("/urls/:id/edit", (req, res) => {
+  const id = req.params.id;
+  res.redirect(`/urls/${id}`);
+});
+
+// when a user edits a short URL, it gets updated in the urlDatabase here
+app.post("/urls/:id/update", (req, res) => {
+  const edited = req.body.updatedURL;
+  urlDatabase[req.params.id].longURL = edited;
+  res.redirect(`/urls`);
+});
+
+// the login page has a few permissions installed in case something goes wrong, like not typing in a name AND a password, the user not being registered yet or the credentials being incorrect. In those cases the user will be redirected to a html error page.
+app.post("/login", (req, res) => {
+  let newEmail = req.body.email;
+  let newPass = req.body.password;
+  const output = getUserByEmail(newEmail, users);
+  if (newEmail === "" || newPass === "") {
+    res.status(400);
+    res.send("Please enter an email address AND a password");
+    return;
+  }
+  if (output) {
+    if (bcrypt.compareSync(newPass, output.password)) {
+      req.session.user_id = "user".
+        res.redirect('/urls');
+      return;
+    }
+    res.status(403).send("Wrong credentials");
+  }
+  res.status(403).send("User not found");
+});
+
+// the registering process includes a hashing technique and some permission settings, like when someone tries to register a username that's already in our database or when one of the fields was left empty (no password or username)
+app.post("/register", (req, res) => {
+  let newEmail = req.body.email;
+  let newPass = req.body.password;
+  if (newPass !== "") {
+    newPass = bcrypt.hashSync(req.body.password, 10);
+  }
+  if (newEmail === "" || newPass === "") {
+    res.status(400);
+    res.send("Please enter an email address AND a password");
+    return;
+  }
+  if (getUserByEmail(newEmail, users)) {
+    res.status(400).send("This email address is already in use!");
+    return;
+  }
+  let randomID = generateRandomString();
+  users[randomID] = {
+    id: randomID,
+    email: newEmail,
+    password: newPass
+  };
+  req.session.user_id = randomID;
+  res.redirect('/urls');
+});
+
+// the logout button will reset the cookies and redirect the user to /urls which will then redirect to the html error page saying the user is not logged in
+app.post("/logout", (req, res) => {
+  req.session = null;
+  res.redirect("/urls");
+});
+
+// adds a new longURL and shortURL to our urlDatabase and shows it on the main page
+app.post("/urls", (req, res) => {
+  let myUsername = req.session.user_id;
+  if (!myUsername) {
+    res.send('Please log in to create a tiny URL');
+    return;
+  }
+  let newKey = generateRandomString();
+  urlDatabase[newKey] = {
+    longURL: req.body.longURL,
+    userID: myUsername
+  };
+  res.redirect(`/urls/${newKey}`);
 });
 
 
